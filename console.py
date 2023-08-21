@@ -11,6 +11,18 @@ from models.city import City
 from models.amenity import Amenity
 from models.review import Review
 
+def tokenize(args: str) -> list:
+    """Tokenizer.
+
+    Args:
+        args (str): console input
+
+    Returns:
+        list: list of tokens
+    """
+
+    tokens = args.split()
+    return tokens
 
 class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
@@ -114,35 +126,42 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """
-        Create an object of any class with custom parameters.
-        Usage: create <Class name> <param1> <param2> <param3>...
-        Param syntax: <key>=<value>
-        """
-        args_list = args.split()
-        
-        if not args_list:
+        """ Create an object of any class"""
+        # Tokenize the args from the console
+        tokens = tokenize(args)
+        # check if args passed
+        if args == "":
             print("** class name missing **")
             return
-        
-        class_name = args_list[0]
+        # extract the class name
+        class_name = tokens[0]
+        # extract all params
+        params = tokens[1:]
+
+        # if class not in class
         if class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        
-        # Prepare parameters dictionary
-        params = {}
-        for param in args_list[1:]:
-            key_value = param.split('=')
-            if len(key_value) == 2:
-                key, value = key_value
-                value = value.replace('_', ' ').replace('\\"', '"')
-                params[key] = value
-        
-        new_instance = HBNBCommand.classes[class_name](**params)
-        storage.save()
+        # create a new class instance
+        new_instance = HBNBCommand.classes[class_name]()
+        # loop through all params and setattr to the object instance
+        for param in params:
+            try:
+                k, v = param.split("=")
+                v = v.replace("_", " ")
+                if v[0] == '"' and v[-1] == '"' and len(v) > 1:
+                    v = v[1:-1]
+                elif "." in v:
+                    v = float(v)
+                else:
+                    v = int(v)
+                setattr(new_instance, k, v)
+            except ValueError:
+                continue
+        new_instance.save()
         print(new_instance.id)
-
+        storage.save()
+ 
     def help_create(self):
         """ Help information for the create method """
         print("Creates a class of any type")
