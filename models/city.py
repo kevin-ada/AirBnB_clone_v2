@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 """ City Module for HBNB project """
+
 from models.base_model import BaseModel, Base
-from models import type_storage
-from sqlalchemy import Column, String, ForeignKey
-from sqlalchemy.orm import relationship
 
 
 class City(BaseModel, Base):
+    from models import type_storage
+    from sqlalchemy import Column, String, ForeignKey
+    from sqlalchemy.orm import relationship
     """ The city class, contains state ID and name """
     __tablename__ = 'cities'
     if type_storage == 'db':

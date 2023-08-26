@@ -3,7 +3,7 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from models.amenity import Amenity
+from models import amenity
 from models.base_model import Base
 from models.city import City
 from models.place import Place
@@ -16,7 +16,7 @@ if getenv('HBNB_TYPE_STORAGE') == 'db':
     from models.place import place_amenity
 
 classes = {"User": User, "State": State, "City": City,
-           "Amenity": Amenity, "Place": Place, "Review": Review}
+           "Amenity": amenity.Amenity, "Place": Place, "Review": Review}
 
 
 class DBStorage:
