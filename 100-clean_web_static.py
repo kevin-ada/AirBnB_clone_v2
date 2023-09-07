@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" Cleans deployment"""
+""" Cleans up outdated web_static archives and directories """
 
 from fabric.api import *
 import os
@@ -11,7 +11,16 @@ env.user = "ubuntu"
 
 
 def do_clean(number=0):
-    """ Removes all but given number of archives"""
+    """
+    Cleans up outdated web_static archives and directories.
+
+    Args:
+        number (int): The number of archives to keep, including the most recent
+
+    Notes:
+        If number is 0 or 1, only the most recent version of the archive kept
+        If number is 2, the most recent and second most recent versions kept
+    """
     number = int(number)
     if number < 2:
         number = 1
