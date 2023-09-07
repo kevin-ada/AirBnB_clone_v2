@@ -25,24 +25,30 @@ sudo chown -R ubuntu:ubuntu /data/
 # Step 6: Update Nginx configuration with an alias
 config_file="/etc/nginx/sites-available/default"
 config_content="server {
-    listen 80;
-    server_name _;
-    location /hbnb_static {
-        alias /data/web_static/current;
-        index index.html;
-    }
-    location / {
-        add_header X-Served-By \$hostname;
-        proxy_set_header Host \$host;
-        proxy_pass http://127.0.0.1:5000;
-    }
-    location /redirect_me {
-        rewrite ^/redirect_me http://www.github.com/benkivuva permanent;
-    }
-    error_page 404 /404.html;
-    location /404 {
-        internal;
-    }
+   listen 80 default_server;
+   listen [::]:80 default_server;
+
+   root /var/www/html;
+   index index.html;
+
+   # Add a custom response header
+   add_header X-Served-By "$hostname";
+
+   # Alias for serving web_static content
+   location /hbnb_static/ {
+       alias /data/web_static/current/;
+   }
+
+   # Redirect location
+   location /redirect_me {
+      return 301 https://www.github.com/benkivuva;
+   }
+
+   # Custom 404 error page
+   error_page 404 /custom_404.html;
+   location = /custom_404.html{
+      internal;
+   }
 }"
 
 # Backup the existing Nginx configuration
