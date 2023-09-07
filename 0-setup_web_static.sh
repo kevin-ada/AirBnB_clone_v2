@@ -1,61 +1,36 @@
 #!/usr/bin/env bash
 
-# Step 1: Install Nginx if not already installed
-if ! [ -x "$(command -v nginx)" ]; then
-    sudo apt-get update
-    sudo apt-get -y install nginx
-fi
+# Update package information and install Nginx
+apt-get -y update
+apt-get -y install nginx
 
-# Step 2: Create necessary directories
-sudo mkdir -p /data/web_static/releases/test/
-sudo mkdir -p /data/web_static/shared/
+# Add the rewrite rule for /redirect_me to redirect to github.com/benkivuva
+sed -i "/listen \[::\]:80 default_server/ a\\\trewrite ^/redirect_me http://github.com/benkivuva permanent;" /etc/nginx/sites-available/default
 
-# Step 3: Create a fake HTML file for testing
-echo "<html><head></head><body>Hello, Nginx!</body></html>" | sudo tee /data/web_static/releases/test/index.html > /dev/null
+# Add a custom response header
+sed -i "/listen \[::\]:80 default_server/ a\\\tadd_header X-Served-By \"\$HOSTNAME\";" /etc/nginx/sites-available/default
 
-# Step 4: Create or recreate symbolic link
-if [ -L /data/web_static/current ]; then
-    sudo rm /data/web_static/current
-fi
-sudo ln -s /data/web_static/releases/test/ /data/web_static/current
+# Add the error_page directive for custom 404 page
+sed -i "/redirect_me/ a\\\terror_page 404 /custom_404.html;" /etc/nginx/sites-available/default
 
-# Step 5: Give ownership to the ubuntu user and group recursively
-sudo chown -R ubuntu:ubuntu /data/
+# Start the Nginx service
+service nginx start
 
-# Step 6: Update Nginx configuration with an alias
-config_file="/etc/nginx/sites-available/default"
-config_content="server {
-   listen 80 default_server;
-   listen [::]:80 default_server;
+# Create necessary directories
+mkdir -p /data/web_static/releases/test/
+mkdir -p /data/web_static/shared/
 
-   root /var/www/html;
-   index index.html;
+# Create an HTML file with content "Hello Nginx"
+echo "Hello Nginx!" > /data/web_static/releases/test/index.html
 
-   # Add a custom response header
-   add_header X-Served-By "$hostname";
+# Create or recreate symbolic link
+ln -sf /data/web_static/releases/test/ /data/web_static/current
 
-   # Alias for serving web_static content
-   location /hbnb_static/ {
-       alias /data/web_static/current/;
-   }
+# Give ownership to the ubuntu user and group recursively
+chown -R ubuntu:ubuntu /data/
 
-   # Redirect location
-   location /redirect_me {
-      return 301 https://www.github.com/benkivuva;
-   }
-
-   # Custom 404 error page
-   error_page 404 /custom_404.html;
-   location = /custom_404.html{
-      internal;
-   }
-}"
-
-# Backup the existing Nginx configuration
-sudo cp "$config_file" "${config_file}.bak"
-
-# Update Nginx configuration
-echo "$config_content" | sudo tee "$config_file" > /dev/null
+# Add the alias directive for serving web_static content and disable directory listing
+sed -i "/^\tlocation \/ {$/ i\\\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;\n\t\tautoindex off;\n}" /etc/nginx/sites-available/default
 
 # Restart Nginx to apply changes
 sudo service nginx restart
