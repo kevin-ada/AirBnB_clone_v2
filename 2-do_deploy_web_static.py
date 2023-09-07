@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-Distributes an archive to web servers using Fabric.
-"""
+"""Deploys an archive to web servers using Fabric."""
 
 from fabric.api import run, put, env
 from os.path import exists
@@ -12,7 +10,7 @@ env.hosts = ['100.25.119.2', '100.25.136.71']
 
 def do_deploy(archive_path):
     """
-    Distributes an archive to web servers and deploys it.
+    Deploys an archive to web servers and updates the web_static content.
 
     Args:
         archive_path (str): The path to the archive to be deployed.
@@ -24,22 +22,26 @@ def do_deploy(archive_path):
         return False
 
     try:
-        archive_name = archive_path.split("/")[-1]
-        folder_name = archive_name.split(".")[0]
+        # Upload the archive to the /tmp/ directory
+        res = put(archive_path, "/tmp")
+        
+        # Check if upload was successful
+        if not res.succeeded:
+            return False
 
-        put(archive_path, "/tmp/")
+        # Extract the archive to a new directory
+        basename = archive_path.split("/")[-1]
+        name = basename[:-4] if basename.endswith(".tgz") else basename
+        newdir = "/data/web_static/releases/" + name
+        run("mkdir -p " + newdir)
+        run("tar -xzf /tmp/" + basename + " -C " + newdir)
 
-        run("mkdir -p /data/web_static/releases/{}/".format(folder_name))
-
-        run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".format(
-            archive_name, folder_name))
-
-        run("rm /tmp/{}".format(archive_name))
-
+        # Clean up temporary files and update web_static content
+        run("rm /tmp/" + basename)
+        run("mv " + newdir + "/web_static/* " + newdir)
+        run("rm -rf " + newdir + "/web_static")
         run("rm -rf /data/web_static/current")
-
-        run("ln -s /data/web_static/releases/{}/ /data/web_static/current"
-            .format(folder_name))
+        run("ln -s " + newdir + " /data/web_static/current")
 
         return True
     except Exception:
