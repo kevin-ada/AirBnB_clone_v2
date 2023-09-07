@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 """Deploys an archive to web servers using Fabric."""
 
-from fabric.api import run, put, env
-from os.path import exists
+from fabric.api import *
+import os
 
 # Set the host IP addresses for web-01 and web-02
 env.hosts = ['100.25.119.2', '100.25.136.71']
-
+env.user = "ubuntu"
 
 def do_deploy(archive_path):
     """
