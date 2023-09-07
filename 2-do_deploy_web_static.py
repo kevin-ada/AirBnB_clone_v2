@@ -24,7 +24,7 @@ def do_deploy(archive_path):
     try:
         # Upload the archive to the /tmp/ directory
         res = put(archive_path, "/tmp")
-        
+
         # Check if upload was successful
         if not res.succeeded:
             return False
