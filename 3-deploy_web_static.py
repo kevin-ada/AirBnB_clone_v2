@@ -1,29 +1,13 @@
 #!/usr/bin/python3
 """ Deploys a web_static archive to web servers """
 
-from fabric.api import *
+from fabric.api import put, run, env, local
 import os
 from datetime import datetime
 import tarfile
 
 env.hosts = ["100.25.119.2", "100.25.136.71"]
 env.user = "ubuntu"
-
-
-def deploy():
-    """
-    Deploys a web_static archive to the web servers.
-
-    Calls the do_pack function to create a web_static archive,
-    then deploys the archive using do_deploy.
-
-    Returns:
-        True if deployment is successful, False otherwise.
-    """
-    tar = do_pack()
-    if not tar:
-        return False
-    return do_deploy(tar)
 
 
 def do_pack():
@@ -77,3 +61,19 @@ def do_deploy(archive_path):
     run("ln -s " + newdir + " /data/web_static/current")
 
     return True
+
+
+def deploy():
+    """
+    Deploys a web_static archive to the web servers.
+
+    Calls the do_pack function to create a web_static archive,
+    then deploys the archive using do_deploy.
+
+    Returns:
+        True if deployment is successful, False otherwise.
+    """
+    tar = do_pack()
+    if not tar:
+        return False
+    return do_deploy(tar)
